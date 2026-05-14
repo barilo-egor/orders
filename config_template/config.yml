@@ -1,0 +1,14 @@
+spring:
+  grpc:
+    server:
+      host:
+      port:
+  datasource:
+    username: ""
+    password: ""
+    driver-class-name: ""
+    url: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+  port:
