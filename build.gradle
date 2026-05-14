@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '4.0.6'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.google.protobuf' version '0.9.6'
+    id 'idea'
 }
 
 group = 'tgb.cryptoexchange'
@@ -42,6 +43,8 @@ dependencies {
     implementation "io.grpc:grpc-protobuf"
     implementation "io.grpc:grpc-stub"
     implementation 'com.google.protobuf:protobuf-java:4.34.1'
+    implementation 'build.buf:protovalidate:1.2.2'
+    protobuf files('build.buf:protovalidate:1.2.2')
 
     implementation 'org.springframework.kafka:spring-kafka'
 
@@ -57,6 +60,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.13.0'
 
     implementation 'com.fasterxml.uuid:java-uuid-generator:5.2.0'
+    implementation 'tgb.cryptoexchange:commons:1.0'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -95,6 +99,13 @@ protobuf {
                 }
             }
         }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("${projectDir}/build/extracted-include-protos/main")
+        generatedSourceDirs += file("${projectDir}/build/extracted-include-protos/main")
     }
 }
 
