@@ -34,7 +34,7 @@ public class CallbackSender {
                     .timeout(Duration.ofSeconds(5))
                     .block();
 
-            log.info("Callback для order {} успешно доставлен на {}", orderDTO.getId(), orderDTO.getCallbackUrl());
+            log.info("Callback для order {} успешно отправлен по адресу {}", orderDTO.getId(), orderDTO.getCallbackUrl());
         } catch (Exception e) {
             log.error("Не удалось доставить callback на {} для order {}: {}", orderDTO.getCallbackUrl(),
                     orderDTO.getId(), e.getMessage());

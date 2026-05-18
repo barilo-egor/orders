@@ -1,5 +1,6 @@
 package tgb.cryptoexchange.orders.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderDTO {
 
     private UUID id;

@@ -3,12 +3,22 @@ spring:
     server:
       host:
       port:
+    client:
+      channels:
+        api-clients:
+          address: ""
   datasource:
     username: ""
     password: ""
-    driver-class-name: ""
     url: ""
-  jpa:
-    hibernate:
-      ddl-auto: update
-  port:
+    driver-class-name: ""
+    jpa:
+      hibernate:
+        ddl-auto: update
+    port:
+tgb:
+  service:
+    auth:
+      url: ""
+      username: ""
+      password: ""

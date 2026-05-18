@@ -3,10 +3,13 @@ package tgb.cryptoexchange.orders.service;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import reactor.core.publisher.Mono;
+import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -29,12 +32,16 @@ public class OrderService {
 
     private final CallbackSender callbackSender;
 
+    private final ApiClientsGrpcService apiClientsGrpcService;
+
     private final TimeBasedEpochGenerator generator = Generators.timeBasedEpochGenerator();
 
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CallbackSender callbackSender) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CallbackSender callbackSender,
+            ApiClientsGrpcService apiClientsGrpcService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.callbackSender = callbackSender;
+        this.apiClientsGrpcService = apiClientsGrpcService;
     }
 
     public OrderDTO create(OrderDTO orderDTO) {
@@ -68,17 +75,25 @@ public class OrderService {
                 @Override
                 public void afterCommit() {
                     log.info("Транзакция успешно закоммичена. Пост-логика для заказа {}", id);
-                    executePostOrderStatusUpdate(id, newStatus);
+                    executePostOrderStatusUpdate(id);
                 }
             });
         }
     }
 
-    private void executePostOrderStatusUpdate(UUID id, OrderStatus newStatus) {
+    private void executePostOrderStatusUpdate(UUID id) {
         Order order = orderRepository.getOrdersById(id);
         OrderDTO orderDTO = orderMapper.entityToDTO(order);
         if (Objects.isNull(orderDTO.getCallbackUrl())) {
-
+            Mono<ClientDTO> clientRequest = apiClientsGrpcService.getClientById(orderDTO.getClientId());
+            clientRequest.subscribe(response -> {
+                if (StringUtils.isBlank(response.getCallbackUrl())) {
+                    return;
+                }
+                orderDTO.setCallbackUrl(response.getCallbackUrl());
+                callbackSender.sendPostOrderStatusUpdate(orderDTO);
+            });
+            return;
         }
         callbackSender.sendPostOrderStatusUpdate(orderDTO);
     }
