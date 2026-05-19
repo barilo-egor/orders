@@ -2,19 +2,21 @@ package tgb.cryptoexchange.orders.service;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import tgb.cryptoexchange.grpc.generated.ClientsServiceGrpc;
-import tgb.cryptoexchange.grpc.generated.GetClientByIdGrpc;
-import tgb.cryptoexchange.grpc.generated.GetClientByIdResponseGrpc;
+import tgb.cryptoexchange.grpc.generated.*;
 import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.exceptions.BaseException;
 import tgb.cryptoexchange.orders.exceptions.UserNotFoundException;
 import tgb.cryptoexchange.orders.mapper.ClientMapper;
+
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -36,7 +38,7 @@ public class ApiClientsGrpcService {
                 .build();
         return Mono.fromFuture(() -> {
                     var guavaFuture = futureStub.getClientById(request);
-                    var completableFuture = new java.util.concurrent.CompletableFuture<GetClientByIdResponseGrpc>();
+                    var completableFuture = new CompletableFuture<GetClientByIdResponseGrpc>();
 
                     Futures.addCallback(
                             guavaFuture,
@@ -51,7 +53,7 @@ public class ApiClientsGrpcService {
                                     completableFuture.completeExceptionally(t);
                                 }
                             },
-                            com.google.common.util.concurrent.MoreExecutors.directExecutor()
+                            MoreExecutors.directExecutor()
                     );
                     return completableFuture;
                 })
@@ -68,4 +70,44 @@ public class ApiClientsGrpcService {
                         e -> new BaseException("Критическая ошибка gRPC: " + e.getMessage()));
     }
 
+    public Mono<String> createSignature(Long clientId, String data) {
+        log.debug("Реактивный gRPC запрос client createSignature: id {} data {}", clientId, data);
+        CreateSignatureGrpc request = CreateSignatureGrpc.newBuilder()
+                .setClientId(clientId)
+                .setData(data)
+                .build();
+
+        return Mono.fromFuture(() -> {
+                    var guavaFuture = futureStub.createSignature(request);
+                    var completableFuture = new CompletableFuture<CreateSignatureResponseGrpc>();
+
+                    Futures.addCallback(
+                            guavaFuture,
+                            new FutureCallback<>() {
+                                @Override
+                                public void onSuccess(CreateSignatureResponseGrpc result) {
+                                    completableFuture.complete(result);
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull Throwable t) {
+                                    completableFuture.completeExceptionally(t);
+                                }
+                            },
+                            MoreExecutors.directExecutor()
+                    );
+                    return completableFuture;
+                })
+                .map(CreateSignatureResponseGrpc::getSignature)
+                .onErrorResume(StatusRuntimeException.class, e -> {
+                    if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                        log.warn("Клиент с ID {} не найден через gRPC при создании подписи", clientId);
+                        return Mono.error(new UserNotFoundException());
+                    }
+                    log.error("gRPC ошибка создания подписи для клиента ID {}: {}", clientId, e.getStatus());
+                    return Mono.error(new BaseException("Ошибка gRPC: " + e.getStatus().getDescription()));
+                })
+                .onErrorMap(e -> !(e instanceof UserNotFoundException || e instanceof BaseException),
+                        e -> new BaseException("Критическая ошибка gRPC при создании подписи: " + e.getMessage()));
+    }
 }

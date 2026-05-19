@@ -1,23 +1,27 @@
 package tgb.cryptoexchange.orders.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import reactor.core.publisher.Mono;
-import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.exceptions.AlreadyExistsException;
+import tgb.cryptoexchange.orders.exceptions.BaseException;
 import tgb.cryptoexchange.orders.exceptions.NotFoundException;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 
+import java.net.URI;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,18 +34,15 @@ public class OrderService {
 
     private final OrderMapper orderMapper;
 
-    private final CallbackSender callbackSender;
-
-    private final ApiClientsGrpcService apiClientsGrpcService;
-
     private final TimeBasedEpochGenerator generator = Generators.timeBasedEpochGenerator();
 
+    private final ApplicationEventPublisher eventPublisher;
+
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CallbackSender callbackSender,
-            ApiClientsGrpcService apiClientsGrpcService) {
+            ApiClientsGrpcService apiClientsGrpcService, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.callbackSender = callbackSender;
-        this.apiClientsGrpcService = apiClientsGrpcService;
+        this.eventPublisher = eventPublisher;
     }
 
     public OrderDTO create(OrderDTO orderDTO) {
@@ -70,32 +71,12 @@ public class OrderService {
         if (result == 0) {
             throw new NotFoundException(id.toString());
         }
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    log.info("Транзакция успешно закоммичена. Пост-логика для заказа {}", id);
-                    executePostOrderStatusUpdate(id);
-                }
-            });
+
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(orderMapper.entityToDTO(orderRepository.getOrdersById(id)));
         }
     }
 
-    private void executePostOrderStatusUpdate(UUID id) {
-        Order order = orderRepository.getOrdersById(id);
-        OrderDTO orderDTO = orderMapper.entityToDTO(order);
-        if (Objects.isNull(orderDTO.getCallbackUrl())) {
-            Mono<ClientDTO> clientRequest = apiClientsGrpcService.getClientById(orderDTO.getClientId());
-            clientRequest.subscribe(response -> {
-                if (StringUtils.isBlank(response.getCallbackUrl())) {
-                    return;
-                }
-                orderDTO.setCallbackUrl(response.getCallbackUrl());
-                callbackSender.sendPostOrderStatusUpdate(orderDTO);
-            });
-            return;
-        }
-        callbackSender.sendPostOrderStatusUpdate(orderDTO);
-    }
+
 
 }

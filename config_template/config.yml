@@ -16,9 +16,7 @@ spring:
       hibernate:
         ddl-auto: update
     port:
-tgb:
-  service:
-    auth:
-      url: ""
-      username: ""
-      password: ""
+kafka:
+  topic:
+    orders:
+      receive:

@@ -1,0 +1,49 @@
+package tgb.cryptoexchange.orders.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import tgb.cryptoexchange.orders.enums.Operation;
+import tgb.cryptoexchange.orders.enums.TransactionType;
+
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * DTO для отправки события подтверждения заказа в Kafka.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderConfirmationEventDTO {
+
+    private UUID id;
+
+    private Long clientId;
+
+    private Integer amount;
+
+    private Operation operation;
+
+    private TransactionType type;
+
+    private String comment;
+
+    public OrderConfirmationEventDTO(UUID id, Long clientId, Integer amount, Operation operation, TransactionType type,
+            UUID orderId) {
+        this.id = id;
+        this.clientId = clientId;
+        this.amount = amount;
+        this.operation = operation;
+        this.type = type;
+        setComment(orderId);
+    }
+
+    public void setComment(UUID orderId){
+        this.comment = "Зачисление по подтвержденному ордеру";
+        if(Objects.nonNull(orderId)){
+            this.comment = this.comment + " " + orderId;
+        }
+    }
+}

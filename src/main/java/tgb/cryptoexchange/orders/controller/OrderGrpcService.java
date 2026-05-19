@@ -9,8 +9,11 @@ import tgb.cryptoexchange.grpc.generated.CreateOrderResponseGrpc;
 import tgb.cryptoexchange.grpc.generated.OrdersServiceGrpc;
 import tgb.cryptoexchange.grpc.generated.UpdateOrderStatusGrpc;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
+import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.service.OrderService;
+
+import java.util.UUID;
 
 @GrpcService
 @Slf4j
@@ -35,7 +38,7 @@ public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
 
     @Override
     public void updateOrderStatus(UpdateOrderStatusGrpc request, StreamObserver<Empty> responseObserver){
-
+        orderService.updateStatus(UUID.fromString(request.getId()), OrderStatus.valueOf(request.getStatus()));
     }
 
 }
