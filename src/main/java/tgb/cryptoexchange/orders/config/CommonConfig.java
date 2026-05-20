@@ -14,6 +14,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import tgb.cryptoexchange.orders.dto.OrderConfirmationEventDTO;
@@ -26,6 +27,7 @@ import java.util.Map;
 
 @Configuration
 @EnableAsync
+@EnableScheduling
 public class CommonConfig {
 
     @Bean

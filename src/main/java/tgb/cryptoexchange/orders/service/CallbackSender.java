@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
+import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.exceptions.BaseException;
 
 import java.net.URI;
@@ -32,6 +33,15 @@ public class CallbackSender {
         this.webClient = webClientBuilder.build();
     }
 
+    /**
+     * Слушатель события успешного обновления {@link Order#getStatus()}
+     * <p>
+     * Метод срабатывает асинхронно после успешного коммита транзакции БД
+     * ({@link TransactionPhase#AFTER_COMMIT}). Запускает реактивную цепочку
+     * получения URL-адреса, генерации цифровой подписи через gRPC и отправки callback-уведомления.
+     *
+     * @param orderDTO данные заказа, для которого необходимо отправить callback
+     */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCreatedEvent(OrderDTO orderDTO) {
         log.info("Транзакция успешно закоммичена. Пост-логика отправки callback для заказа {}", orderDTO.getId());
@@ -84,7 +94,7 @@ public class CallbackSender {
         }
     }
 
-    public Mono<Void> sendPostOrderStatusUpdate(OrderDTO orderDTO, String signature, long timestamp) {
+    private Mono<Void> sendPostOrderStatusUpdate(OrderDTO orderDTO, String signature, long timestamp) {
         if (StringUtils.isBlank(orderDTO.getCallbackUrl())) {
             log.warn("Пропущена отправка callback: URL пуст для order {}", orderDTO.getId());
             return Mono.empty();

@@ -5,16 +5,16 @@ import com.google.rpc.Status;
 import lombok.Getter;
 
 @Getter
-public class GrpcBaseException extends RuntimeException {
+public class GrpcValidationException extends RuntimeException {
 
     private final Status rpcStatus;
 
-    public GrpcBaseException(Status rpcStatus) {
+    public GrpcValidationException(Status rpcStatus) {
         super(rpcStatus.getMessage());
         this.rpcStatus = rpcStatus;
     }
 
-    public GrpcBaseException(Code code, String message,  com.google.protobuf.Any... details) {
+    public GrpcValidationException(Code code, String message, com.google.protobuf.Any... details) {
         super(message);
         this.rpcStatus = Status.newBuilder()
                 .setCode(code.getNumber())

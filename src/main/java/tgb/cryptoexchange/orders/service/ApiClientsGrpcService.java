@@ -31,6 +31,14 @@ public class ApiClientsGrpcService {
         this.clientMapper = clientMapper;
     }
 
+    /**
+     * Асинхронно запрашивает данные клиента по его идентификатору через gRPC.
+     *
+     * @param clientId уникальный идентификатор клиента
+     * @return {@link Mono}, содержащий {@link ClientDTO} в случае успешного выполнения
+     * @throws UserNotFoundException если клиент с указанным ID не найден (gRPC NOT_FOUND)
+     * @throws BaseException в случае сбоя сети или других системных ошибок gRPC
+     */
     public Mono<ClientDTO> getClientById(Long clientId) {
         log.debug("Реактивный gRPC запрос client: id {}", clientId);
         GetClientByIdGrpc request = GetClientByIdGrpc.newBuilder()
@@ -70,6 +78,15 @@ public class ApiClientsGrpcService {
                         e -> new BaseException("Критическая ошибка gRPC: " + e.getMessage()));
     }
 
+    /**
+     * Асинхронно генерирует цифровую подпись для переданных данных клиента через gRPC.
+     *
+     * @param clientId уникальный идентификатор клиента
+     * @param data     строка данных для подписания
+     * @return {@link Mono}, содержащий сгенерированную строку подписи
+     * @throws UserNotFoundException if клиент с указанным ID не найден (gRPC NOT_FOUND)
+     * @throws BaseException         при сетевых сбоях, внутренних ошибках gRPC или критических исключениях
+     */
     public Mono<String> createSignature(Long clientId, String data) {
         log.debug("Реактивный gRPC запрос client createSignature: id {} data {}", clientId, data);
         CreateSignatureGrpc request = CreateSignatureGrpc.newBuilder()

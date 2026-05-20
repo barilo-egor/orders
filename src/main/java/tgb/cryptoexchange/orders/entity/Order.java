@@ -49,6 +49,7 @@ public class Order {
     /**
      * Индикатор того, была ли разрешена уникализация клиентом.
      */
+    @Builder.Default
     @Column(nullable = false, name = "enable_unique_amount")
     private Boolean enableUniqueAmount = false;
 

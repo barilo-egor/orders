@@ -5,8 +5,12 @@ import lombok.*;
 import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 
+import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * @see tgb.cryptoexchange.orders.entity.Order
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,5 +38,7 @@ public class OrderDTO {
     private Boolean enableUniqueAmount;
 
     private String callbackUrl;
+
+    private Instant createdAt;
 
 }

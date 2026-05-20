@@ -3,11 +3,9 @@ package tgb.cryptoexchange.orders.controller;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.grpc.server.service.GrpcService;
-import tgb.cryptoexchange.grpc.generated.CreateOrderGrpc;
-import tgb.cryptoexchange.grpc.generated.CreateOrderResponseGrpc;
-import tgb.cryptoexchange.grpc.generated.OrdersServiceGrpc;
-import tgb.cryptoexchange.grpc.generated.UpdateOrderStatusGrpc;
+import tgb.cryptoexchange.grpc.generated.*;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
@@ -37,8 +35,26 @@ public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
     }
 
     @Override
-    public void updateOrderStatus(UpdateOrderStatusGrpc request, StreamObserver<Empty> responseObserver){
+    public void updateOrderStatus(UpdateOrderStatusGrpc request, StreamObserver<Empty> responseObserver) {
         orderService.updateStatus(UUID.fromString(request.getId()), OrderStatus.valueOf(request.getStatus()));
+    }
+
+    @Override
+    public void getOrders(GetOrdersGrpc request, StreamObserver<GetOrdersResponseGrpc> responseObserver) {
+        PaginationParams pagination = request.getPagination();
+
+        Page<OrderDTO> dtoPage = orderService.findOrders(orderMapper.buildFindSpecification(request),
+                pagination.getPage(),
+                pagination.getSize(),
+                pagination.getSortersList().stream().toList());
+
+        GetOrdersResponseGrpc response = GetOrdersResponseGrpc.newBuilder()
+                .addAllOrders(dtoPage.getContent().stream().map(orderMapper::toOrderResponse).toList())
+                .setTotalElements(dtoPage.getTotalElements())
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
 }

@@ -32,6 +32,15 @@ public class OrderConfirmationEventListener {
         this.receiveTopicName = receiveTopicName;
     }
 
+    /**
+     * Пост-транзакционный обработчик для отправки уведомления в Kafka при успешном завершении заказа.
+     * <p>
+     * Метод срабатывает асинхронно после коммита транзакции БД ({@link TransactionPhase#AFTER_COMMIT}).
+     * Если статус заказа {@link OrderDTO#getStatus()} равен {@link OrderStatus#SUCCESS},
+     * формируется и отправляется событие подтверждения в топик Kafka.
+     *
+     * @param orderDTO данные заказа для проверки статуса и отправки уведомления
+     */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCreatedEvent(OrderDTO orderDTO) {
         if (OrderStatus.SUCCESS.equals(orderDTO.getStatus())) {
