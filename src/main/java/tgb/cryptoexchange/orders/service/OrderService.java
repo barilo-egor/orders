@@ -1,28 +1,19 @@
 package tgb.cryptoexchange.orders.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import reactor.core.publisher.Mono;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.exceptions.AlreadyExistsException;
-import tgb.cryptoexchange.orders.exceptions.BaseException;
 import tgb.cryptoexchange.orders.exceptions.NotFoundException;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 
-import java.net.URI;
-import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -38,8 +29,8 @@ public class OrderService {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CallbackSender callbackSender,
-            ApiClientsGrpcService apiClientsGrpcService, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.eventPublisher = eventPublisher;
@@ -76,7 +67,5 @@ public class OrderService {
             eventPublisher.publishEvent(orderMapper.entityToDTO(orderRepository.getOrdersById(id)));
         }
     }
-
-
 
 }
