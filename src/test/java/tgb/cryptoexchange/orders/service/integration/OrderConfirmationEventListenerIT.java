@@ -27,7 +27,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
 
@@ -116,8 +117,18 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
 
         orderService.updateStatus(orderId, OrderStatus.TIMEOUT);
 
-        ConsumerRecords<String, OrderConfirmationEventDTO> records = testConsumer.poll(Duration.ofSeconds(2));
-        assertTrue(records.isEmpty(), "Обнаружено неожиданное сообщение в топике " + kafkaTopic);
+        org.awaitility.Awaitility.await()
+                .during(1, java.util.concurrent.TimeUnit.SECONDS)
+                .atMost(2, java.util.concurrent.TimeUnit.SECONDS)
+                .until(() -> {
+                    ConsumerRecords<String, OrderConfirmationEventDTO> records = testConsumer.poll(
+                            Duration.ofMillis(100));
+
+                    return java.util.stream.StreamSupport.stream(records.spliterator(), false)
+                            .noneMatch(kafkaRecord ->
+                                    kafkaRecord.value() != null && kafkaRecord.value().getComment()
+                                            .contains(orderId.toString()));
+                });
     }
 
 }

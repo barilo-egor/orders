@@ -27,7 +27,7 @@ import org.wiremock.spring.InjectWireMock;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 
 @ActiveProfiles("test")
-@SpringBootTest(properties = "grpc.server.port=-1")
+@SpringBootTest(properties = "spring.grpc.server.port=0")
 @RecordApplicationEvents
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(WireMockConfiguration.class)
@@ -38,17 +38,14 @@ import tgb.cryptoexchange.orders.repository.OrderRepository;
 @Testcontainers
 public abstract class BaseIntegrationTest {
 
-    static final MySQLContainer<?> mysql;
+    @SuppressWarnings("resource")
+    static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("testdb")
+            .withReuse(true);
 
-    static final KafkaContainer kafka;
+    static final KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.0"));
 
     static {
-        mysql = new MySQLContainer<>("mysql:8.0")
-                .withDatabaseName("testdb")
-                .withReuse(true);
-
-        kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.0"));
-
         mysql.start();
         kafka.start();
     }
