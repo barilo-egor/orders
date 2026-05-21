@@ -72,13 +72,16 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-data-jpa-test"
     testImplementation 'org.springframework.grpc:spring-grpc-test'
     testImplementation 'io.grpc:grpc-testing'
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.2.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation "org.testcontainers:junit-jupiter:1.21.4"
     testImplementation "org.testcontainers:kafka:1.21.4"
     testImplementation "org.testcontainers:mysql:1.21.4"
     testImplementation "org.assertj:assertj-core:3.27.7"
+    testImplementation 'io.projectreactor:reactor-test'
 }
 
 protobuf {

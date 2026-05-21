@@ -1,7 +1,7 @@
 package tgb.cryptoexchange.orders.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import tgb.cryptoexchange.orders.enums.Operation;
@@ -15,7 +15,6 @@ import java.util.UUID;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class OrderConfirmationEventDTO {
 
     private UUID id;
@@ -40,10 +39,27 @@ public class OrderConfirmationEventDTO {
         setComment(orderId);
     }
 
-    public void setComment(UUID orderId){
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public OrderConfirmationEventDTO(
+            @JsonProperty("id") UUID id,
+            @JsonProperty("clientId") Long clientId,
+            @JsonProperty("amount") Integer amount,
+            @JsonProperty("operation") Operation operation,
+            @JsonProperty("type") TransactionType type,
+            @JsonProperty("comment") String comment) {
+        this.id = id;
+        this.clientId = clientId;
+        this.amount = amount;
+        this.operation = operation;
+        this.type = type;
+        this.comment = comment;
+    }
+
+    public void setComment(UUID orderId) {
         this.comment = "Зачисление по подтвержденному ордеру";
-        if(Objects.nonNull(orderId)){
+        if (Objects.nonNull(orderId)) {
             this.comment = this.comment + " " + orderId;
         }
     }
+
 }

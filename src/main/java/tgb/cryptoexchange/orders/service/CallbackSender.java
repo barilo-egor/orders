@@ -13,9 +13,7 @@ import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.exceptions.BaseException;
 
 import java.net.URI;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
 
 @Slf4j
 @Component
@@ -27,7 +25,8 @@ public class CallbackSender {
 
     private final WebClient webClient;
 
-    public CallbackSender(ObjectMapper objectMapper, ApiClientsGrpcService apiClientsGrpcService, WebClient.Builder webClientBuilder) {
+    public CallbackSender(ObjectMapper objectMapper, ApiClientsGrpcService apiClientsGrpcService,
+            WebClient.Builder webClientBuilder) {
         this.objectMapper = objectMapper;
         this.apiClientsGrpcService = apiClientsGrpcService;
         this.webClient = webClientBuilder.build();
@@ -49,7 +48,7 @@ public class CallbackSender {
     }
 
     private void executePostOrderStatusUpdate(OrderDTO orderDTO) {
-        Mono<String> callbackUrlMono = Objects.isNull(orderDTO.getCallbackUrl())
+        Mono<String> callbackUrlMono = StringUtils.isBlank(orderDTO.getCallbackUrl())
                 ? apiClientsGrpcService.getClientById(orderDTO.getClientId())
                 .map(clientDto -> {
                     orderDTO.setCallbackUrl(clientDto.getCallbackUrl());
