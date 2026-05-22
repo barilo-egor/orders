@@ -139,11 +139,9 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
 
         orderService.updateStatus(orderId, OrderStatus.SUCCESS);
 
-        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            verify(postRequestedFor(urlEqualTo(callbackPath))
-                    .withHeader("Signature", equalTo(mockSignature))
-            );
-        });
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verify(postRequestedFor(urlEqualTo(callbackPath))
+                .withHeader("Signature", equalTo(mockSignature))
+        ));
     }
 
     @Test
