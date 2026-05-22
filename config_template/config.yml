@@ -17,6 +17,46 @@ spring:
         ddl-auto: update
     port:
 kafka:
+  group-id:
   topic:
     orders:
       receive:
+    merchant-details:
+      callback:
+    unknown-status:
+      receive:
+merchant:
+  callback:
+    success-statuses:
+      - CHARGED
+      - CLOSED
+      - COMPLETED
+      - COMPLETED_AFTER_DISPUTE
+      - CONFIRMED
+      - FINISHED
+      - OVERPAID
+      - PAID
+      - READY
+      - SUCCESS
+      - SUCCESSFUL
+      - SUCCEEDED
+    fail-statuses:
+      - CANCEL
+      - CANCELED
+      - CANCELED_BY_SERVICE
+      - CANCELED_BY_TIMEOUT
+      - CANCELLED
+      - DENIED
+      - DISPUTE_IN_PROGRESS
+      - ERROR
+      - EXPIRE
+      - EXPIRED
+      - FAIL
+      - FAILED
+      - FAILED_AFTER_DISPUTE
+      - INCORRECT_AMOUNT
+      - NO_REQUISITES
+      - REFUNDED
+      - REMOVED
+      - TIMEOUT
+      - UNISSUED

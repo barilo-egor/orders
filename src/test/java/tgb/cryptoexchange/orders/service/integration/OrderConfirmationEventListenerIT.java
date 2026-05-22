@@ -15,9 +15,9 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import tgb.cryptoexchange.orders.dto.OrderConfirmationEventDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
+import tgb.cryptoexchange.orders.kafka.OrderConfirmationEvent;
 import tgb.cryptoexchange.orders.service.CallbackSender;
 import tgb.cryptoexchange.orders.service.OrderService;
 
@@ -41,7 +41,7 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
     @Value("${kafka.topic.orders.receive}")
     private String kafkaTopic;
 
-    private Consumer<String, OrderConfirmationEventDTO> testConsumer;
+    private Consumer<String, OrderConfirmationEvent> testConsumer;
 
     @BeforeEach
     void setUpKafkaConsumer() {
@@ -50,11 +50,11 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         StringDeserializer keyDeserializer = new StringDeserializer();
-        JacksonJsonDeserializer<OrderConfirmationEventDTO> valueDeserializer = new JacksonJsonDeserializer<>(
-                OrderConfirmationEventDTO.class);
+        JacksonJsonDeserializer<OrderConfirmationEvent> valueDeserializer = new JacksonJsonDeserializer<>(
+                OrderConfirmationEvent.class);
         valueDeserializer.addTrustedPackages("*");
 
-        DefaultKafkaConsumerFactory<String, OrderConfirmationEventDTO> consumerFactory =
+        DefaultKafkaConsumerFactory<String, OrderConfirmationEvent> consumerFactory =
                 new DefaultKafkaConsumerFactory<>(consumerProps, keyDeserializer, valueDeserializer);
 
         testConsumer = consumerFactory.createConsumer();
@@ -89,12 +89,12 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
         orderRepository.saveAndFlush(order);
         orderService.updateStatus(orderId, OrderStatus.SUCCESS);
 
-        ConsumerRecord<String, OrderConfirmationEventDTO> receivedRecord =
+        ConsumerRecord<String, OrderConfirmationEvent> receivedRecord =
                 KafkaTestUtils.getSingleRecord(testConsumer, kafkaTopic, Duration.ofSeconds(5));
 
         assertNotNull(receivedRecord, "Сообщение не было доставлено в топик " + kafkaTopic);
 
-        OrderConfirmationEventDTO eventPayload = receivedRecord.value();
+        OrderConfirmationEvent eventPayload = receivedRecord.value();
         assertEquals(clientId, eventPayload.getClientId());
         assertEquals("Зачисление по подтвержденному ордеру " + orderId, eventPayload.getComment());
         assertEquals(0, amount.compareTo(eventPayload.getAmount()));
@@ -121,7 +121,7 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
                 .during(1, java.util.concurrent.TimeUnit.SECONDS)
                 .atMost(2, java.util.concurrent.TimeUnit.SECONDS)
                 .until(() -> {
-                    ConsumerRecords<String, OrderConfirmationEventDTO> records = testConsumer.poll(
+                    ConsumerRecords<String, OrderConfirmationEvent> records = testConsumer.poll(
                             Duration.ofMillis(100));
 
                     return java.util.stream.StreamSupport.stream(records.spliterator(), false)

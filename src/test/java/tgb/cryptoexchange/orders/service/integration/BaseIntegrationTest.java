@@ -1,5 +1,6 @@
 package tgb.cryptoexchange.orders.service.integration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -17,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.event.RecordApplicationEvents;
-import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
@@ -75,6 +75,9 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected KafkaProperties kafkaProperties;
 
+    @Autowired
+    protected ObjectMapper objectMapper;
+
     @BeforeEach
     void initWireMockClient() {
         wireMockClient = new WireMock("localhost", wireMockServer.port());
@@ -89,7 +92,6 @@ public abstract class BaseIntegrationTest {
     }
 
     @BeforeEach
-    @Transactional
     void clearDatabase() {
         orderRepository.deleteAllInBatch();
     }

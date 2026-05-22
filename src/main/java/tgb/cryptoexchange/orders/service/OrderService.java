@@ -19,6 +19,7 @@ import tgb.cryptoexchange.orders.repository.OrderRepository;
 import tgb.cryptoexchange.orders.utils.PageableUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -100,6 +101,17 @@ public class OrderService {
     public Page<OrderDTO> findOrders(Specification<Order> spec, int page, int size, List<String> sorters) {
         Pageable pageable = PageableUtils.createPageable(page, size, sorters);
         return orderRepository.findAll(spec, pageable).map(orderMapper::entityToDTO);
+    }
+
+    /**
+     * Находит order по его уникальному идентификатору.
+     *
+     * @param id идентификатор order (UUID)
+     * @return {@link Optional} с DTO order, или пустой {@link Optional}, если order не найден
+     */
+    @Transactional(readOnly = true)
+    public Optional<OrderDTO> findById(UUID id) {
+        return orderRepository.findById(id).map(orderMapper::entityToDTO);
     }
 
     /**

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ class CallbackSenderTest {
     private WebClient.RequestBodySpec requestBodySpec;
 
     @Mock
-    private WebClient.RequestHeadersSpec requestHeadersSpec;
+    private WebClient.RequestHeadersSpec<?> requestHeadersSpec;
 
     @Mock
     private WebClient.ResponseSpec responseSpec;
@@ -71,7 +72,10 @@ class CallbackSenderTest {
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.header(anyString(), anyString())).thenReturn(requestBodySpec);
-        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestBodyUriSpec.uri(ArgumentMatchers.anyString())).thenReturn(requestBodySpec);
+        doReturn(requestHeadersSpec).when(requestBodySpec).bodyValue(ArgumentMatchers.any());
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
 
         when(responseSpec.toBodilessEntity()).thenReturn(Mono.just(ResponseEntity.ok().build()));

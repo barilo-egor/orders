@@ -1,4 +1,4 @@
-package tgb.cryptoexchange.orders.dto;
+package tgb.cryptoexchange.orders.kafka;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 @Data
 @NoArgsConstructor
-public class OrderConfirmationEventDTO {
+public class OrderConfirmationEvent {
 
     private UUID id;
 
@@ -29,7 +29,7 @@ public class OrderConfirmationEventDTO {
 
     private String comment;
 
-    public OrderConfirmationEventDTO(UUID id, Long clientId, Integer amount, Operation operation, TransactionType type,
+    public OrderConfirmationEvent(UUID id, Long clientId, Integer amount, Operation operation, TransactionType type,
             UUID orderId) {
         this.id = id;
         this.clientId = clientId;
@@ -40,7 +40,7 @@ public class OrderConfirmationEventDTO {
     }
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public OrderConfirmationEventDTO(
+    public OrderConfirmationEvent(
             @JsonProperty("id") UUID id,
             @JsonProperty("clientId") Long clientId,
             @JsonProperty("amount") Integer amount,

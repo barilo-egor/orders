@@ -1,0 +1,194 @@
+package tgb.cryptoexchange.orders.service.integration;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tgb.cryptoexchange.commons.enums.Merchant;
+import tgb.cryptoexchange.orders.entity.Order;
+import tgb.cryptoexchange.orders.enums.OrderStatus;
+import tgb.cryptoexchange.orders.kafka.MerchantCallbackEvent;
+import tgb.cryptoexchange.orders.repository.OrderRepository;
+
+import java.time.Duration;
+import java.util.UUID;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+
+class MerchantCallbackListenerIT extends BaseIntegrationTest {
+
+    @Value("${kafka.topic.merchant-details.callback}")
+    private String inputTopic;
+
+    @Value("${kafka.topic.unknown-status.receive}")
+    private String unknownStatusTopic;
+
+    @Autowired
+    private KafkaTemplate<String, String> rawKafkaTemplate;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @MockitoSpyBean
+    private KafkaTemplate<String, MerchantCallbackEvent> kafkaTemplateUnknownStatus;
+
+    private UUID orderId;
+
+    @BeforeEach
+    void setUpData() {
+        orderId = UUID.randomUUID();
+        Order order = new Order();
+        order.setId(orderId);
+        order.setInternalId("internalId");
+        order.setStatus(OrderStatus.NEW);
+        order.setAmount(1000);
+        order.setClientId(322L);
+        orderRepository.saveAndFlush(order);
+    }
+
+    @Test
+    @DisplayName("Успешный сценарий: обновление статуса заказа в SUCCESS")
+    void shouldUpdateOrderStatusToSuccessWhenStatusIsSuccessful() throws Exception {
+        MerchantCallbackEvent event = MerchantCallbackEvent.builder()
+                .merchantOrderId(orderId.toString())
+                .merchant(Merchant.ALFA_TEAM)
+                .status("CHARGED")
+                .statusDescription("Payment completed successfully")
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(event);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
+                .untilAsserted(() -> {
+                    Order updatedOrder = orderRepository.findById(orderId)
+                            .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
+                    assertEquals(OrderStatus.SUCCESS, updatedOrder.getStatus());
+                });
+    }
+
+    @Test
+    @DisplayName("Неуспешный сценарий: обновление статуса заказа в TIMEOUT")
+    void shouldUpdateOrderStatusToTimeoutWhenStatusIsFailed() throws Exception {
+        MerchantCallbackEvent event = MerchantCallbackEvent.builder()
+                .merchantOrderId(orderId.toString())
+                .merchant(Merchant.ALFA_TEAM)
+                .status("CANCEL")
+                .statusDescription("Payment cancel or failed")
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(event);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    Order updatedOrder = orderRepository.findById(orderId)
+                            .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
+                    assertEquals(OrderStatus.TIMEOUT, updatedOrder.getStatus());
+                });
+    }
+
+    @Test
+    @DisplayName("Пропуск обработки: нейтральный статус не должен изменять заказ")
+    void shouldNotUpdateStatusWhenStatusIsNeutral() throws Exception {
+        MerchantCallbackEvent event = MerchantCallbackEvent.builder()
+                .merchantOrderId(orderId.toString())
+                .merchant(Merchant.ALFA_TEAM)
+                .status("qwerty")
+                .statusDescription("Payment is qwerty")
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(event);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
+                .untilAsserted(() -> {
+                    Order orderAfterCallback = orderRepository.findById(orderId).orElseThrow();
+                    assertEquals(OrderStatus.NEW, orderAfterCallback.getStatus());
+                });
+    }
+
+    @Test
+    @DisplayName("Валидация полей: сообщение с null-полями должно игнорироваться")
+    void shouldIgnoreEventAndReturnWhenRequiredFieldsAreNull() throws Exception {
+        MerchantCallbackEvent invalidEvent = MerchantCallbackEvent.builder()
+                .merchantOrderId(orderId.toString())
+                .merchant(null)
+                .status(null)
+                .statusDescription(null)
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(invalidEvent);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
+                .untilAsserted(() -> {
+                    Order orderAfterCallback = orderRepository.findById(orderId)
+                            .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
+                    assertEquals(OrderStatus.NEW, orderAfterCallback.getStatus());
+                });
+    }
+
+    @Test
+    @DisplayName("Некорректный формат UUID в merchantOrderId")
+    void shouldHandleExceptionGracefullyWhenOrderIdIsInvalidUuid() throws Exception {
+        MerchantCallbackEvent eventWithInvalidUuid = MerchantCallbackEvent.builder()
+                .merchantOrderId("not-a-valid-uuid")
+                .merchant(Merchant.ALFA_TEAM)
+                .status("CHARGED")
+                .statusDescription("Valid status but invalid ID")
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(eventWithInvalidUuid);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
+                .untilAsserted(() -> {
+                    Order orderAfterCallback = orderRepository.findById(orderId)
+                            .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
+                    assertEquals(OrderStatus.NEW, orderAfterCallback.getStatus());
+                });
+    }
+
+    @Test
+    @DisplayName("Отправка неизвестного статуса в отдельный топик")
+    void shouldSendToUnknownStatusTopicWhenStatusIsNeutral() throws Exception {
+        String unknownStatus = "CUSTOM_UNKNOWN_STATUS_FROM_MERCHANT";
+        MerchantCallbackEvent event = MerchantCallbackEvent.builder()
+                .merchantOrderId(orderId.toString())
+                .merchant(Merchant.ALFA_TEAM)
+                .status(unknownStatus)
+                .statusDescription("Some strange status")
+                .build();
+
+        String jsonPayload = objectMapper.writeValueAsString(event);
+        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(kafkaTemplateUnknownStatus).send(
+                        eq(unknownStatusTopic),
+                        any()
+                ));
+
+        Order orderAfterCallback = orderRepository.findById(orderId).orElseThrow();
+        assertEquals(OrderStatus.NEW, orderAfterCallback.getStatus());
+    }
+
+}

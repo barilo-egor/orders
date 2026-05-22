@@ -7,24 +7,25 @@ import org.apache.kafka.common.serialization.Serializer;
 import tgb.cryptoexchange.orders.exceptions.BodyMappingException;
 
 @Slf4j
-public class OrderConfirmationEventSerializer implements Serializer<OrderConfirmationEvent> {
+public class UnknownStatusSerializer implements Serializer<MerchantCallbackEvent> {
 
     private final ObjectMapper objectMapper;
 
-    public OrderConfirmationEventSerializer(ObjectMapper objectMapper) {
+    public UnknownStatusSerializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public byte[] serialize(String topic, OrderConfirmationEvent orderConfirmationEvent) {
+    public byte[] serialize(String topic, MerchantCallbackEvent merchantCallbackEvent) {
         try {
-            if (orderConfirmationEvent == null) {
+            if (merchantCallbackEvent == null) {
                 return new byte[0];
             }
-            return objectMapper.writeValueAsBytes(orderConfirmationEvent);
+            return objectMapper.writeValueAsBytes(merchantCallbackEvent);
         } catch (JsonProcessingException e) {
-            log.error("Ошибка сериализации объекта для отправки в топик {}: {}", topic, orderConfirmationEvent);
+            log.error("Ошибка сериализации объекта для отправки в топик {}: {}", topic, merchantCallbackEvent);
             throw new BodyMappingException("Error occurred while mapping orderConfirmationEvent", e);
         }
     }
+
 }
