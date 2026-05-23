@@ -37,6 +37,9 @@ public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
     @Override
     public void updateOrderStatus(UpdateOrderStatusGrpc request, StreamObserver<Empty> responseObserver) {
         orderService.updateStatus(UUID.fromString(request.getId()), OrderStatus.valueOf(request.getStatus()));
+
+        responseObserver.onNext(Empty.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
