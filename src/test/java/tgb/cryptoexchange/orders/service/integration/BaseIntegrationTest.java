@@ -32,7 +32,7 @@ import tgb.cryptoexchange.orders.repository.OrderRepository;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(WireMockConfiguration.class)
 @ConfigureWireMock(
-        name = "client-service",
+        name = "order-service",
         baseUrlProperties = { "app.webclient.base-url" }
 )
 @Testcontainers
