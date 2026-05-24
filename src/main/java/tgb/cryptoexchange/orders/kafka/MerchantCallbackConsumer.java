@@ -53,7 +53,8 @@ public class MerchantCallbackConsumer {
             return;
         }
         try {
-            Optional<OrderDTO> optionalOrderDTO = orderService.findById(UUID.fromString(event.getMerchantOrderId()));
+
+            Optional<OrderDTO> optionalOrderDTO = orderService.findByMerchantOrderId(event.getMerchantOrderId());
             optionalOrderDTO.ifPresent(orderDTO -> {
                 if (merchantStatusProperties.isSuccess(event.getStatus())) {
                     orderService.updateStatus(orderDTO.getId(), OrderStatus.SUCCESS);

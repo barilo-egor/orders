@@ -41,15 +41,21 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
 
     private UUID orderId;
 
+    private String merchantId;
+
     @BeforeEach
     void setUpData() {
         orderId = UUID.randomUUID();
+        merchantId = UUID.randomUUID().toString();
         Order order = new Order();
         order.setId(orderId);
         order.setInternalId("internalId");
         order.setStatus(OrderStatus.NEW);
         order.setAmount(1000);
         order.setClientId(322L);
+        order.setMerchant(Merchant.ALFA_TEAM);
+        order.setMerchantOrderId(merchantId);
+        order.setMerchantOrderStatus("merchantStatus");
         orderRepository.saveAndFlush(order);
     }
 
@@ -57,14 +63,14 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
     @DisplayName("Успешный сценарий: обновление статуса заказа в SUCCESS")
     void shouldUpdateOrderStatusToSuccessWhenStatusIsSuccessful() throws Exception {
         MerchantCallbackEvent event = MerchantCallbackEvent.builder()
-                .merchantOrderId(orderId.toString())
+                .merchantOrderId(merchantId)
                 .merchant(Merchant.ALFA_TEAM)
                 .status("CHARGED")
                 .statusDescription("Payment completed successfully")
                 .build();
 
         String jsonPayload = objectMapper.writeValueAsString(event);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+        rawKafkaTemplate.send(inputTopic, merchantId, jsonPayload).get();
 
         await()
                 .atMost(Duration.ofSeconds(10))
@@ -80,14 +86,14 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
     @DisplayName("Неуспешный сценарий: обновление статуса заказа в TIMEOUT")
     void shouldUpdateOrderStatusToTimeoutWhenStatusIsFailed() throws Exception {
         MerchantCallbackEvent event = MerchantCallbackEvent.builder()
-                .merchantOrderId(orderId.toString())
+                .merchantOrderId(merchantId)
                 .merchant(Merchant.ALFA_TEAM)
                 .status("CANCEL")
                 .statusDescription("Payment cancel or failed")
                 .build();
 
         String jsonPayload = objectMapper.writeValueAsString(event);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+        rawKafkaTemplate.send(inputTopic, merchantId, jsonPayload).get();
 
         await()
                 .atMost(Duration.ofSeconds(10))
@@ -102,14 +108,14 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
     @DisplayName("Пропуск обработки: нейтральный статус не должен изменять заказ")
     void shouldNotUpdateStatusWhenStatusIsNeutral() throws Exception {
         MerchantCallbackEvent event = MerchantCallbackEvent.builder()
-                .merchantOrderId(orderId.toString())
+                .merchantOrderId(merchantId)
                 .merchant(Merchant.ALFA_TEAM)
                 .status("qwerty")
                 .statusDescription("Payment is qwerty")
                 .build();
 
         String jsonPayload = objectMapper.writeValueAsString(event);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+        rawKafkaTemplate.send(inputTopic, merchantId, jsonPayload).get();
 
         await()
                 .atMost(Duration.ofSeconds(10))
@@ -124,37 +130,14 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
     @DisplayName("Валидация полей: сообщение с null-полями должно игнорироваться")
     void shouldIgnoreEventAndReturnWhenRequiredFieldsAreNull() throws Exception {
         MerchantCallbackEvent invalidEvent = MerchantCallbackEvent.builder()
-                .merchantOrderId(orderId.toString())
+                .merchantOrderId(merchantId)
                 .merchant(null)
                 .status(null)
                 .statusDescription(null)
                 .build();
 
         String jsonPayload = objectMapper.writeValueAsString(invalidEvent);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
-
-        await()
-                .atMost(Duration.ofSeconds(10))
-                .pollInterval(Duration.ofMillis(200))
-                .untilAsserted(() -> {
-                    Order orderAfterCallback = orderRepository.findById(orderId)
-                            .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
-                    assertEquals(OrderStatus.NEW, orderAfterCallback.getStatus());
-                });
-    }
-
-    @Test
-    @DisplayName("Некорректный формат UUID в merchantOrderId")
-    void shouldHandleExceptionGracefullyWhenOrderIdIsInvalidUuid() throws Exception {
-        MerchantCallbackEvent eventWithInvalidUuid = MerchantCallbackEvent.builder()
-                .merchantOrderId("not-a-valid-uuid")
-                .merchant(Merchant.ALFA_TEAM)
-                .status("CHARGED")
-                .statusDescription("Valid status but invalid ID")
-                .build();
-
-        String jsonPayload = objectMapper.writeValueAsString(eventWithInvalidUuid);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+        rawKafkaTemplate.send(inputTopic, merchantId, jsonPayload).get();
 
         await()
                 .atMost(Duration.ofSeconds(10))
@@ -171,14 +154,14 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
     void shouldSendToUnknownStatusTopicWhenStatusIsNeutral() throws Exception {
         String unknownStatus = "CUSTOM_UNKNOWN_STATUS_FROM_MERCHANT";
         MerchantCallbackEvent event = MerchantCallbackEvent.builder()
-                .merchantOrderId(orderId.toString())
+                .merchantOrderId(merchantId)
                 .merchant(Merchant.ALFA_TEAM)
                 .status(unknownStatus)
                 .statusDescription("Some strange status")
                 .build();
 
         String jsonPayload = objectMapper.writeValueAsString(event);
-        rawKafkaTemplate.send(inputTopic, orderId.toString(), jsonPayload).get();
+        rawKafkaTemplate.send(inputTopic, merchantId, jsonPayload).get();
 
         await()
                 .atMost(Duration.ofSeconds(10))

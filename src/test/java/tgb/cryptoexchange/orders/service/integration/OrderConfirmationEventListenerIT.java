@@ -15,6 +15,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.kafka.OrderConfirmationEvent;
@@ -83,6 +84,9 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
         order.setInternalId(UUID.randomUUID().toString());
         order.setClientId(clientId);
         order.setAmount(amount);
+        order.setMerchant(Merchant.ALFA_TEAM);
+        order.setMerchantOrderStatus("qwerty");
+        order.setMerchantOrderId("12345");
         order.setStatus(OrderStatus.NEW);
         order.setCreatedAt(Instant.now());
 
@@ -110,6 +114,9 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
         order.setInternalId(UUID.randomUUID().toString());
         order.setClientId(777L);
         order.setAmount(amount);
+        order.setMerchant(Merchant.ALFA_TEAM);
+        order.setMerchantOrderStatus("qwerty");
+        order.setMerchantOrderId("12345");
         order.setStatus(OrderStatus.NEW);
         order.setCreatedAt(Instant.now());
 

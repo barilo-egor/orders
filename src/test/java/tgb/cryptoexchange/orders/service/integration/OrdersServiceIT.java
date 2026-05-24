@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.event.ApplicationEvents;
+import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.grpc.generated.GetOrdersGrpc;
 import tgb.cryptoexchange.grpc.generated.GetOrdersResponseGrpc;
 import tgb.cryptoexchange.grpc.generated.OrdersServiceGrpc;
@@ -47,6 +48,9 @@ class OrdersServiceIT extends BaseIntegrationTest {
                 .amount(1500)
                 .enableUniqueAmount(true)
                 .callbackUrl("https://example.com")
+                .merchantOrderId("123n45")
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("APPROVED")
                 .status(OrderStatus.SUCCESS)
                 .build();
 
@@ -83,6 +87,9 @@ class OrdersServiceIT extends BaseIntegrationTest {
                 .id(orderId)
                 .clientId(777L)
                 .internalId("internal-update-1")
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .status(OrderStatus.NEW)
                 .amount(1000)
                 .build();
@@ -209,6 +216,9 @@ class OrdersServiceIT extends BaseIntegrationTest {
                 .internalId("internal-" + UUID.randomUUID().toString().substring(0, 8))
                 .status(OrderStatus.NEW)
                 .amount(amount)
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .createdAt(createdAt)
                 .enableUniqueAmount(false)
                 .build();

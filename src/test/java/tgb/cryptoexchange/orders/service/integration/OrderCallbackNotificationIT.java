@@ -6,6 +6,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
+import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -56,6 +57,9 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .internalId("internal-callback-it-1")
                 .status(OrderStatus.NEW)
                 .amount(5000)
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .callbackUrl(null)
                 .build();
         orderRepository.saveAndFlush(order);
@@ -94,6 +98,9 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .internalId("internal-callback-it-2")
                 .status(OrderStatus.NEW)
                 .amount(100)
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .callbackUrl(fullCallbackUrl)
                 .build();
         orderRepository.saveAndFlush(order);
@@ -132,6 +139,9 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .clientId(clientId)
                 .internalId("internal-callback-err-1")
                 .status(OrderStatus.NEW)
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .amount(5000)
                 .callbackUrl(fullCallbackUrl)
                 .build();
@@ -156,6 +166,9 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .clientId(clientId)
                 .internalId("internal-callback-malformed")
                 .status(OrderStatus.NEW)
+                .merchant(Merchant.ALFA_TEAM)
+                .merchantOrderStatus("qwerty")
+                .merchantOrderId("12345")
                 .amount(1000)
                 .callbackUrl(invalidUrl)
                 .build();

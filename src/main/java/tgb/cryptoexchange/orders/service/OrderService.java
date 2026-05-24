@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -61,6 +62,9 @@ public class OrderService {
                 .status(OrderStatus.NEW)
                 .amount(orderDTO.getAmount())
                 .enableUniqueAmount(orderDTO.getEnableUniqueAmount())
+                .merchant(orderDTO.getMerchant())
+                .merchantOrderId(orderDTO.getMerchantOrderId())
+                .merchantOrderStatus(orderDTO.getMerchantOrderStatus())
                 .callbackUrl(orderDTO.getCallbackUrl())
                 .build();
 
@@ -104,14 +108,14 @@ public class OrderService {
     }
 
     /**
-     * Находит order по его уникальному идентификатору.
+     * Находит order по идентификатору ордера в системе мерчанта.
      *
      * @param id идентификатор order (UUID)
      * @return {@link Optional} с DTO order, или пустой {@link Optional}, если order не найден
      */
     @Transactional(readOnly = true)
-    public Optional<OrderDTO> findById(UUID id) {
-        return orderRepository.findById(id).map(orderMapper::entityToDTO);
+    public Optional<OrderDTO> findByMerchantOrderId(String id) {
+        return orderRepository.findByMerchantOrderId(id).map(orderMapper::entityToDTO);
     }
 
     /**

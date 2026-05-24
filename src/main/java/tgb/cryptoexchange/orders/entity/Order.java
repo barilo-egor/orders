@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 
 import java.time.Instant;
@@ -52,6 +53,25 @@ public class Order {
     @Builder.Default
     @Column(nullable = false, name = "enable_unique_amount")
     private Boolean enableUniqueAmount = false;
+
+    /**
+     * Константа мерчанта, от которого были получены реквизиты.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Merchant merchant;
+
+    /**
+     * Идентификатор ордера в системе мерчанта.
+     */
+    @Column(nullable = false, name = "merchant_order_id")
+    private String merchantOrderId;
+
+    /**
+     * Статус ордера в системе мерчанта.
+     */
+    @Column(nullable = false, name = "merchant_order_status")
+    private String merchantOrderStatus;
 
     /**
      * URL на который будет отправлен HTTP запрос об изменении статуса с информацией об ордере.

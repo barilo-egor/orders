@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Transactional
@@ -21,5 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     int updateStatusById(@Param("id") UUID id, @Param("status") OrderStatus status);
 
     Order getOrdersById(UUID id);
+
+    Optional<Order> findByMerchantOrderId(String merchantOrderId);
 
 }
