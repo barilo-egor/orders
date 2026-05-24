@@ -10,11 +10,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tgb.cryptoexchange.commons.enums.Merchant;
+import tgb.cryptoexchange.orders.config.MerchantStatusProperties;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.exceptions.AlreadyExistsException;
 import tgb.cryptoexchange.orders.exceptions.NotFoundException;
+import tgb.cryptoexchange.orders.kafka.MerchantCallbackEvent;
+import tgb.cryptoexchange.orders.kafka.MerchantUnknownStatusService;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 import tgb.cryptoexchange.orders.utils.PageableUtils;
@@ -36,11 +39,18 @@ public class OrderService {
 
     private final ApplicationEventPublisher eventPublisher;
 
+    private final MerchantStatusProperties merchantStatusProperties;
+
+    private final MerchantUnknownStatusService merchantUnknownStatusService;
+
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher, MerchantStatusProperties merchantStatusProperties,
+                        MerchantUnknownStatusService merchantUnknownStatusService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.eventPublisher = eventPublisher;
+        this.merchantStatusProperties = merchantStatusProperties;
+        this.merchantUnknownStatusService = merchantUnknownStatusService;
     }
 
     /**
@@ -90,6 +100,25 @@ public class OrderService {
         if (eventPublisher != null) {
             eventPublisher.publishEvent(orderMapper.entityToDTO(orderRepository.getOrdersById(id)));
         }
+    }
+
+    /**
+     * Обновляет статус order на основе события от мерчанта.
+     * <p>
+     *
+     * @param id    уникальный идентификатор order
+     * @param event объект события с данными от мерчанта
+     */
+    public void updateStatusByMerchantStatus(UUID id, MerchantCallbackEvent event) {
+        log.debug("Запрос на обновление статуса order от merchantCallback, id={}, merchantCallback={}", id, event);
+        if (merchantStatusProperties.isSuccess(event.getStatus())) {
+            updateStatus(id, OrderStatus.SUCCESS);
+        } else if (merchantStatusProperties.isFail(event.getStatus())) {
+            updateStatus(id, OrderStatus.TIMEOUT);
+        } else {
+            merchantUnknownStatusService.sendUnknownStatusCallback(event);
+        }
+        orderRepository.updateMerchantOrderStatusById(id, event.getStatus());
     }
 
     /**

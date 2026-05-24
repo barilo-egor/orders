@@ -21,15 +21,8 @@ public class MerchantCallbackConsumer {
 
     private final OrderService orderService;
 
-    private final MerchantStatusProperties merchantStatusProperties;
-
-    private final MerchantUnknownStatusService merchantUnknownStatusService;
-
-    public MerchantCallbackConsumer(OrderService orderService, MerchantStatusProperties merchantStatusProperties,
-            MerchantUnknownStatusService merchantUnknownStatusService) {
+    public MerchantCallbackConsumer(OrderService orderService) {
         this.orderService = orderService;
-        this.merchantStatusProperties = merchantStatusProperties;
-        this.merchantUnknownStatusService = merchantUnknownStatusService;
     }
 
     /**
@@ -55,15 +48,7 @@ public class MerchantCallbackConsumer {
         try {
 
             Optional<OrderDTO> optionalOrderDTO = orderService.findByMerchantOrderId(event.getMerchantOrderId());
-            optionalOrderDTO.ifPresent(orderDTO -> {
-                if (merchantStatusProperties.isSuccess(event.getStatus())) {
-                    orderService.updateStatus(orderDTO.getId(), OrderStatus.SUCCESS);
-                } else if (merchantStatusProperties.isFail(event.getStatus())) {
-                    orderService.updateStatus(orderDTO.getId(), OrderStatus.TIMEOUT);
-                } else {
-                    merchantUnknownStatusService.sendUnknownStatusCallback(event);
-                }
-            });
+            optionalOrderDTO.ifPresent(orderDTO -> orderService.updateStatusByMerchantStatus(orderDTO.getId(),event));
         } catch (Exception e) {
             log.error("Ошибка при попытке обновления статуса order по orderId={}.Event={}, message={}.",
                     event.getMerchantOrderId(), event, e.getMessage(), e);

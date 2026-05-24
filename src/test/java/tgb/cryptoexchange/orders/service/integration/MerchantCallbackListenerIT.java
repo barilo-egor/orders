@@ -79,6 +79,7 @@ class MerchantCallbackListenerIT extends BaseIntegrationTest {
                     Order updatedOrder = orderRepository.findById(orderId)
                             .orElseThrow(() -> new AssertionError("Заказ пропал из БД"));
                     assertEquals(OrderStatus.SUCCESS, updatedOrder.getStatus());
+                    assertEquals("CHARGED", updatedOrder.getMerchantOrderStatus());
                 });
     }
 

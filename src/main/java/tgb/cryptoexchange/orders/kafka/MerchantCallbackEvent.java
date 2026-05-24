@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import tgb.cryptoexchange.commons.enums.Merchant;
 
 import java.io.IOException;
@@ -18,6 +15,7 @@ import java.io.IOException;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class MerchantCallbackEvent {
 
     private String merchantOrderId;

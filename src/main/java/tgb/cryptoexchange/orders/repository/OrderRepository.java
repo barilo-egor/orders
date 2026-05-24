@@ -21,6 +21,11 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     @Query("UPDATE Order o SET o.status = :status WHERE o.id = :id")
     int updateStatusById(@Param("id") UUID id, @Param("status") OrderStatus status);
 
+    @Modifying
+    @Query("UPDATE Order o SET o.merchantOrderStatus = :merchantOrderStatus WHERE o.id = :id")
+    int updateMerchantOrderStatusById(@Param("id") UUID id, @Param("merchantOrderStatus") String merchantOrderStatus);
+
+
     Order getOrdersById(UUID id);
 
     Optional<Order> findByMerchantOrderId(String merchantOrderId);
