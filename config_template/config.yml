@@ -12,10 +12,10 @@ spring:
     password: ""
     url: ""
     driver-class-name: ""
-    jpa:
-      hibernate:
-        ddl-auto: update
-    port:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  port:
 kafka:
   group-id:
   topic:
