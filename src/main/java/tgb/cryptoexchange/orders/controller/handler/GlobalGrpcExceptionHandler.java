@@ -4,7 +4,6 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.protobuf.StatusProto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.grpc.server.GlobalServerInterceptor;
 import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.stereotype.Component;
 import tgb.cryptoexchange.orders.exceptions.CustomException;
@@ -12,7 +11,6 @@ import tgb.cryptoexchange.orders.exceptions.GrpcValidationException;
 
 @Slf4j
 @Component
-@GlobalServerInterceptor
 public class GlobalGrpcExceptionHandler implements GrpcExceptionHandler {
 
     @Override
