@@ -36,18 +36,15 @@ public class GlobalGrpcExceptionHandler implements GrpcExceptionHandler {
                 .setCode(code.getNumber())
                 .setMessage(message != null ? message : "");
 
-        if (code == com.google.rpc.Code.INVALID_ARGUMENT) {
-            com.google.rpc.BadRequest badRequest = com.google.rpc.BadRequest.newBuilder()
-                    .addFieldViolations(com.google.rpc.BadRequest.FieldViolation.newBuilder()
-                            .setField(field != null ? field : "")
-                            .setDescription(description != null ? description : "")
-                            .build())
-                    .build();
-            statusBuilder.addDetails(com.google.protobuf.Any.pack(badRequest));
-        }
+        com.google.rpc.BadRequest badRequest = com.google.rpc.BadRequest.newBuilder()
+                .addFieldViolations(com.google.rpc.BadRequest.FieldViolation.newBuilder()
+                        .setField(field != null ? field : "")
+                        .setDescription(description != null ? description : "")
+                        .build())
+                .build();
+        statusBuilder.addDetails(com.google.protobuf.Any.pack(badRequest));
 
         var runtimeEx = StatusProto.toStatusRuntimeException(statusBuilder.build());
         return new StatusException(runtimeEx.getStatus(), runtimeEx.getTrailers());
     }
-
 }
