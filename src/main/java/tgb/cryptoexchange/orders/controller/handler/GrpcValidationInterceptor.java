@@ -4,6 +4,7 @@ import build.buf.protovalidate.ValidationResult;
 import build.buf.protovalidate.Validator;
 import build.buf.protovalidate.ValidatorFactory;
 import build.buf.protovalidate.exceptions.ValidationException;
+import build.buf.validate.FieldPathElement;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.rpc.BadRequest;
@@ -58,9 +59,12 @@ public class GrpcValidationInterceptor implements ServerInterceptor {
     private com.google.rpc.Status buildRpcStatus(ValidationResult result) {
         BadRequest.Builder badRequestBuilder = BadRequest.newBuilder();
         for (var violation : result.toProto().getViolationsList()) {
+            String fieldPathStr = violation.getField().getElementsList().stream()
+                    .map(FieldPathElement::getFieldName)
+                    .collect(java.util.stream.Collectors.joining("."));
             badRequestBuilder.addFieldViolations(
                     BadRequest.FieldViolation.newBuilder()
-                            .setField(violation.getField().toString())
+                            .setField(fieldPathStr)
                             .setDescription(violation.getMessage())
                             .build()
             );
