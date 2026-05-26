@@ -1,5 +1,7 @@
 package tgb.cryptoexchange.orders.service.integration;
 
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,8 @@ class OrdersServiceIT extends BaseIntegrationTest {
 
     private OrdersServiceGrpc.OrdersServiceBlockingStub blockingStub;
 
+    private final TimeBasedEpochGenerator generator = Generators.timeBasedEpochGenerator();
+
     @BeforeEach
     void initStub() {
         blockingStub = OrdersServiceGrpc.newBlockingStub(channel);
@@ -43,6 +47,7 @@ class OrdersServiceIT extends BaseIntegrationTest {
     @DisplayName("Успешное создание заказа с валидными данными")
     void shouldCreateOrderSuccessfully() {
         OrderDTO requestDto = OrderDTO.builder()
+                .id(generator.generate())
                 .clientId(42L)
                 .internalId("unique-internal-id-001")
                 .amount(1500)

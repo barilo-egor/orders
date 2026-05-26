@@ -1,7 +1,5 @@
 package tgb.cryptoexchange.orders.service;
 
-import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -9,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tgb.cryptoexchange.commons.enums.Merchant;
 import tgb.cryptoexchange.orders.config.MerchantStatusProperties;
+import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -22,6 +20,7 @@ import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 import tgb.cryptoexchange.orders.utils.PageableUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +34,7 @@ public class OrderService {
 
     private final OrderMapper orderMapper;
 
-    private final TimeBasedEpochGenerator generator = Generators.timeBasedEpochGenerator();
+    private final ApiClientsGrpcService apiClientsGrpcService;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -45,12 +44,14 @@ public class OrderService {
 
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
             ApplicationEventPublisher eventPublisher, MerchantStatusProperties merchantStatusProperties,
-                        MerchantUnknownStatusService merchantUnknownStatusService) {
+            MerchantUnknownStatusService merchantUnknownStatusService,
+            ApiClientsGrpcService apiClientsGrpcService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.eventPublisher = eventPublisher;
         this.merchantStatusProperties = merchantStatusProperties;
         this.merchantUnknownStatusService = merchantUnknownStatusService;
+        this.apiClientsGrpcService = apiClientsGrpcService;
     }
 
     /**
@@ -66,7 +67,7 @@ public class OrderService {
             throw new AlreadyExistsException(orderDTO.getInternalId());
         }
         Order order = Order.builder()
-                .id(generator.generate())
+                .id(orderDTO.getId())
                 .clientId(orderDTO.getClientId())
                 .internalId(orderDTO.getInternalId())
                 .status(OrderStatus.NEW)
@@ -81,6 +82,15 @@ public class OrderService {
         order = orderRepository.save(order);
         log.debug("Создан order: {}", order.getId());
         return orderMapper.entityToDTO(order);
+    }
+
+    public Instant getOrderTimeoutExpirationTime(Instant orderCreatedAt, Long clientId) {
+        ClientDTO clientDTO = apiClientsGrpcService.getClientById(clientId).block();
+        Instant timeoutExpirationTime = null;
+        if (clientDTO != null && clientDTO.getOrderTimeoutSeconds() != null) {
+            timeoutExpirationTime = orderCreatedAt.plusSeconds(clientDTO.getOrderTimeoutSeconds());
+        }
+        return timeoutExpirationTime;
     }
 
     /**

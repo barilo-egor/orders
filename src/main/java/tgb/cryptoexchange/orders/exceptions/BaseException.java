@@ -1,12 +1,14 @@
 package tgb.cryptoexchange.orders.exceptions;
 
+import com.google.rpc.Code;
 import lombok.Getter;
-import tgb.cryptoexchange.orders.enums.ErrorCode;
+
+import static com.google.rpc.Code.INTERNAL;
 
 @Getter
 public class BaseException extends RuntimeException implements CustomException {
 
-    private final ErrorCode errorCode;
+    private final Code errorCode;
 
     private final String field;
 
@@ -14,7 +16,7 @@ public class BaseException extends RuntimeException implements CustomException {
 
     public BaseException(String message) {
         super(message);
-        this.errorCode = ErrorCode.INTERNAL;
+        this.errorCode = INTERNAL;
         this.field = null;
         this.description = null;
     }

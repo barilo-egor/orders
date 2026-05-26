@@ -1,10 +1,10 @@
 package tgb.cryptoexchange.orders.exceptions;
 
-import tgb.cryptoexchange.orders.enums.ErrorCode;
+import com.google.rpc.Code;
 
 public interface CustomException {
 
-    ErrorCode getErrorCode();
+    Code getErrorCode();
 
     String getField();
 

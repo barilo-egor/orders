@@ -52,6 +52,7 @@ class OrderServiceTest {
     @DisplayName("Успешное создание заказа со статусом NEW и генерацией UUID")
     void create_Success() {
         OrderDTO inputDto = new OrderDTO();
+        inputDto.setId(UUID.randomUUID());
         inputDto.setInternalId("internal-123");
         inputDto.setClientId(1L);
         inputDto.setAmount(10);

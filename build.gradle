@@ -40,6 +40,7 @@ dependencies {
 
     implementation platform("org.springframework.grpc:spring-grpc-dependencies:1.0.3")
     implementation 'org.springframework.grpc:spring-grpc-spring-boot-starter'
+
     implementation 'build.buf:protovalidate:1.2.2'
     protobuf files('build.buf:protovalidate:1.2.2')
 

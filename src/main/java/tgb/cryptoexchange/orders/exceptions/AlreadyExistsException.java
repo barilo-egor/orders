@@ -1,12 +1,14 @@
 package tgb.cryptoexchange.orders.exceptions;
 
+import com.google.rpc.Code;
 import lombok.Getter;
-import tgb.cryptoexchange.orders.enums.ErrorCode;
+
+import static com.google.rpc.Code.INVALID_ARGUMENT;
 
 @Getter
-public class AlreadyExistsException extends RuntimeException implements CustomException{
+public class AlreadyExistsException extends RuntimeException implements CustomException {
 
-    private final ErrorCode errorCode;
+    private final Code errorCode;
 
     private final String field;
 
@@ -14,7 +16,7 @@ public class AlreadyExistsException extends RuntimeException implements CustomEx
 
     public AlreadyExistsException(final String field) {
         super("Bad request.");
-        this.errorCode = ErrorCode.INVALID_ARGUMENT;
+        this.errorCode = INVALID_ARGUMENT;
         this.field = field;
         this.description = "Should be unique.";
     }

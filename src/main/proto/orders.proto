@@ -17,14 +17,15 @@ service OrdersService {
 }
 
 message CreateOrderGrpc {
-  int64 client_id = 1 [(buf.validate.field).int64.gt = 0];
-  string internal_id = 2 [(buf.validate.field).string.min_len = 1];
-  string merchant = 3 [(buf.validate.field).string.pattern = "^[A-Z_]+$"];
-  string merchant_order_id = 4 [(buf.validate.field).string.min_len = 1];
-  string merchant_order_status = 5 [(buf.validate.field).string.pattern = "^[A-Z_]+$"];
-  int32 amount = 6 [(buf.validate.field).int32.gt = 0];
-  bool enable_unique_amount = 7;
-  optional string callback_url = 8 [(buf.validate.field).string.uri = true];
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  int64 client_id = 2 [(buf.validate.field).int64.gt = 0];
+  string internal_id = 3 [(buf.validate.field).string.min_len = 1];
+  string merchant = 4 [(buf.validate.field).string.pattern = "^[A-Z_]+$"];
+  string merchant_order_id = 5 [(buf.validate.field).string.min_len = 1];
+  string merchant_order_status = 6 [(buf.validate.field).string.pattern = "^[A-Z_]+$"];
+  int32 amount = 7 [(buf.validate.field).int32.gt = 0];
+  bool enable_unique_amount = 8;
+  optional string callback_url = 9 [(buf.validate.field).string.uri = true];
 }
 
 message CreateOrderResponseGrpc {
@@ -35,6 +36,8 @@ message CreateOrderResponseGrpc {
   int32 amount = 5;
   bool enable_unique_amount = 6;
   optional string callback_url = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp expires_at = 9;
 }
 
 message UpdateOrderStatusGrpc {

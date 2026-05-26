@@ -28,6 +28,7 @@ public class OrderMapper {
 
     public OrderDTO toDTO(CreateOrderGrpc order) {
         return OrderDTO.builder()
+                .id(UUID.fromString(order.getId()))
                 .clientId(order.getClientId())
                 .internalId(order.getInternalId())
                 .merchant(Merchant.valueOf(order.getMerchant()))
@@ -53,7 +54,7 @@ public class OrderMapper {
     }
 
     public CreateOrderResponseGrpc createOrderResponseGrpc(OrderDTO orderDTO) {
-        return CreateOrderResponseGrpc.newBuilder()
+        CreateOrderResponseGrpc.Builder builder = CreateOrderResponseGrpc.newBuilder()
                 .setId(Objects.nonNull(orderDTO.getId()) ? orderDTO.getId().toString() : StringUtils.EMPTY)
                 .setClientId(Objects.nonNull(orderDTO.getClientId()) ? orderDTO.getClientId() : 0)
                 .setInternalId(Objects.requireNonNullElse(orderDTO.getInternalId(), StringUtils.EMPTY))
@@ -61,8 +62,14 @@ public class OrderMapper {
                 .setAmount(Objects.nonNull(orderDTO.getAmount()) ? orderDTO.getAmount() : 0)
                 .setEnableUniqueAmount(
                         Objects.nonNull(orderDTO.getEnableUniqueAmount()) && orderDTO.getEnableUniqueAmount())
-                .setCallbackUrl(Objects.requireNonNullElse(orderDTO.getCallbackUrl(), StringUtils.EMPTY))
-                .build();
+                .setCallbackUrl(Objects.requireNonNullElse(orderDTO.getCallbackUrl(), StringUtils.EMPTY));
+        if (Objects.nonNull(orderDTO.getCreatedAt())) {
+            builder.setCreatedAt(instantToTimestamp(orderDTO.getCreatedAt()));
+        }
+        if (Objects.nonNull(orderDTO.getExpiresAt())) {
+            builder.setExpiresAt(instantToTimestamp(orderDTO.getExpiresAt()));
+        }
+        return builder.build();
     }
 
     public Specification<Order> buildFindSpecification(GetOrdersGrpc request) {
