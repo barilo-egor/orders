@@ -1,33 +1,29 @@
 package tgb.cryptoexchange.orders.controller.handler;
 
+import com.google.rpc.Code;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.protobuf.StatusProto;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.stereotype.Component;
 import tgb.cryptoexchange.orders.exceptions.CustomException;
-import tgb.cryptoexchange.orders.exceptions.GrpcValidationException;
 
 @Slf4j
 @Component
 public class GlobalGrpcExceptionHandler implements GrpcExceptionHandler {
 
     @Override
-    public io.grpc.StatusException handleException(Throwable ex) {
-        return switch (ex) {
-            case CustomException customEx -> {
-                com.google.rpc.Code grpcCode = customEx.getErrorCode();
-                yield buildStatusException(grpcCode, ex.getMessage(), customEx.getField(), customEx.getDescription());
-            }
-            case GrpcValidationException grpcEx -> StatusProto.toStatusException(grpcEx.getRpcStatus());
-            default -> {
-                log.error("Unexpected system error: ", ex);
-                yield Status.INTERNAL
-                        .withDescription("Internal server error")
-                        .asException();
-            }
-        };
+    public io.grpc.StatusException handleException(@NonNull Throwable ex) {
+        if (ex instanceof CustomException customEx) {
+            Code grpcCode = customEx.getErrorCode();
+            return buildStatusException(grpcCode, ex.getMessage(), customEx.getField(), customEx.getDescription());
+        }
+        log.error("Unexpected system error: ", ex);
+        return Status.INTERNAL
+                .withDescription("Internal server error")
+                .asException();
     }
 
     private StatusException buildStatusException(com.google.rpc.Code code, String message, String field,
