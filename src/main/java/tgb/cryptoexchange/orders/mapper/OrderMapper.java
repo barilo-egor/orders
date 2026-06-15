@@ -66,9 +66,6 @@ public class OrderMapper {
         if (Objects.nonNull(orderDTO.getCreatedAt())) {
             builder.setCreatedAt(instantToTimestamp(orderDTO.getCreatedAt()));
         }
-        if (Objects.nonNull(orderDTO.getExpiresAt())) {
-            builder.setExpiresAt(instantToTimestamp(orderDTO.getExpiresAt()));
-        }
         return builder.build();
     }
 

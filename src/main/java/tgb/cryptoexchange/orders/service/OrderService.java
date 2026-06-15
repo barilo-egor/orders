@@ -8,7 +8,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tgb.cryptoexchange.orders.config.MerchantStatusProperties;
-import tgb.cryptoexchange.orders.dto.ClientDTO;
 import tgb.cryptoexchange.orders.dto.OrderDTO;
 import tgb.cryptoexchange.orders.entity.Order;
 import tgb.cryptoexchange.orders.enums.OrderStatus;
@@ -20,7 +19,6 @@ import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.repository.OrderRepository;
 import tgb.cryptoexchange.orders.utils.PageableUtils;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,8 +32,6 @@ public class OrderService {
 
     private final OrderMapper orderMapper;
 
-    private final ApiClientsGrpcService apiClientsGrpcService;
-
     private final ApplicationEventPublisher eventPublisher;
 
     private final MerchantStatusProperties merchantStatusProperties;
@@ -44,14 +40,12 @@ public class OrderService {
 
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
             ApplicationEventPublisher eventPublisher, MerchantStatusProperties merchantStatusProperties,
-            MerchantUnknownStatusService merchantUnknownStatusService,
-            ApiClientsGrpcService apiClientsGrpcService) {
+            MerchantUnknownStatusService merchantUnknownStatusService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.eventPublisher = eventPublisher;
         this.merchantStatusProperties = merchantStatusProperties;
         this.merchantUnknownStatusService = merchantUnknownStatusService;
-        this.apiClientsGrpcService = apiClientsGrpcService;
     }
 
     /**
@@ -82,15 +76,6 @@ public class OrderService {
         order = orderRepository.save(order);
         log.debug("Создан order: {}", order.getId());
         return orderMapper.entityToDTO(order);
-    }
-
-    public Instant getOrderTimeoutExpirationTime(Instant orderCreatedAt, Long clientId) {
-        ClientDTO clientDTO = apiClientsGrpcService.getClientById(clientId).block();
-        Instant timeoutExpirationTime = null;
-        if (clientDTO != null && clientDTO.getOrderTimeoutSeconds() != null) {
-            timeoutExpirationTime = orderCreatedAt.plusSeconds(clientDTO.getOrderTimeoutSeconds());
-        }
-        return timeoutExpirationTime;
     }
 
     /**
@@ -165,7 +150,7 @@ public class OrderService {
      * @return {@link List} со всеми найденными сущностями order
      */
     @Transactional(readOnly = true)
-    public List<Order> findOrderByField(Specification<Order> spec){
+    public List<Order> findOrderByField(Specification<Order> spec) {
         return orderRepository.findAll(spec);
     }
 

@@ -11,7 +11,6 @@ import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.service.OrderService;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @GrpcService
@@ -31,10 +30,6 @@ public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
     public void createOrder(CreateOrderGrpc request, StreamObserver<CreateOrderResponseGrpc> responseObserver) {
         OrderDTO orderDTO = orderMapper.toDTO(request);
         OrderDTO savedOrder = orderService.create(orderDTO);
-
-        Instant expiresAt = orderService.getOrderTimeoutExpirationTime(savedOrder.getCreatedAt(),
-                savedOrder.getClientId());
-        savedOrder.setExpiresAt(expiresAt);
 
         responseObserver.onNext(orderMapper.createOrderResponseGrpc(savedOrder));
         responseObserver.onCompleted();

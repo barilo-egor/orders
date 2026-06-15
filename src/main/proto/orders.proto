@@ -37,7 +37,6 @@ message CreateOrderResponseGrpc {
   bool enable_unique_amount = 6;
   optional string callback_url = 7;
   google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp expires_at = 9;
 }
 
 message UpdateOrderStatusGrpc {

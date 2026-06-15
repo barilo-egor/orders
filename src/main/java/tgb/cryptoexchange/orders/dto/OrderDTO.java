@@ -41,6 +41,4 @@ public class OrderDTO {
 
     private Instant createdAt;
 
-    private Instant expiresAt;
-
 }
