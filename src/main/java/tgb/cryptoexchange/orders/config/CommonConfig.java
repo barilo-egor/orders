@@ -101,7 +101,8 @@ public class CommonConfig {
     @Bean
     @Profile("!kafka-disabled")
     public ConsumerFactory<String, MerchantCallbackEvent> merchantCallbackEventConsumerFactory(
-            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers, ObjectMapper objectMapper) {
+            @Value("${spring.kafka.merchant-details.merchant-details.bootstrap-servers}") String bootstrapServers,
+            ObjectMapper objectMapper) {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         StringDeserializer keyDeserializer = new StringDeserializer();
@@ -114,7 +115,7 @@ public class CommonConfig {
     @Bean
     @Profile("!kafka-disabled")
     public ConcurrentKafkaListenerContainerFactory<String, MerchantCallbackEvent> merchantCallbackKafkaListenerContainerFactory(
-            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
+            @Value("${spring.kafka.merchant-details.bootstrap-servers}") String bootstrapServers,
             ObjectMapper objectMapper, ErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, MerchantCallbackEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();

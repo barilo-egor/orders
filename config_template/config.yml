@@ -18,6 +18,8 @@ spring:
   port:
   kafka:
     bootstrap-servers:
+    merchant-details:
+      bootstrap-servers:
 kafka:
   group-id:
   topic:

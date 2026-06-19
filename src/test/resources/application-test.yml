@@ -11,6 +11,8 @@ spring:
       javax:persistence.schema-generation.database.action: none
   kafka:
     bootstrap-servers: ${spring.kafka.bootstrap-servers}
+    merchant-details:
+      bootstrap-servers: ${spring.kafka.bootstrap-servers}
 kafka:
   group-id: "test-group-id"
   topic:
