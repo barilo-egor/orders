@@ -101,7 +101,7 @@ public class CommonConfig {
     @Bean
     @Profile("!kafka-disabled")
     public ConsumerFactory<String, MerchantCallbackEvent> merchantCallbackEventConsumerFactory(
-            @Value("${spring.kafka.merchant-details.merchant-details.bootstrap-servers}") String bootstrapServers,
+            @Value("${spring.kafka.merchant-details.bootstrap-servers}") String bootstrapServers,
             ObjectMapper objectMapper) {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
