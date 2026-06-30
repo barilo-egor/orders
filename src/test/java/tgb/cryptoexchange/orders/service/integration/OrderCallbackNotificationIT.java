@@ -64,7 +64,7 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .build();
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.SUCCESS);
+        orderService.updateStatus(orderId.toString(), OrderStatus.SUCCESS);
 
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verify(postRequestedFor(urlEqualTo(callbackPath))
                 .withHeader("Signature", equalTo(mockSignature))
@@ -105,7 +105,7 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .build();
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.SUCCESS);
+        orderService.updateStatus(orderId.toString(), OrderStatus.SUCCESS);
 
         await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> verify(postRequestedFor(urlEqualTo(callbackPath))
                 .withHeader("Signature", equalTo(mockSignature))
@@ -147,7 +147,7 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .build();
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.SUCCESS);
+        orderService.updateStatus(orderId.toString(), OrderStatus.SUCCESS);
 
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verify(postRequestedFor(urlEqualTo(callbackPath))
                 .withHeader("Signature", equalTo(mockSignature))
@@ -174,7 +174,7 @@ class OrderCallbackNotificationIT extends BaseIntegrationTest {
                 .build();
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.SUCCESS);
+        orderService.updateStatus(orderId.toString(), OrderStatus.SUCCESS);
 
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> verify(0, postRequestedFor(anyUrl())));
 

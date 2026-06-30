@@ -22,6 +22,20 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     int updateStatusById(@Param("id") UUID id, @Param("status") OrderStatus status);
 
     @Modifying
+    @Query("UPDATE Order o SET o.status = :status WHERE o.id = :id AND o.clientId = :clientId")
+    int updateStatusByIdAndClientId(@Param("id") UUID id, @Param("clientId") Long clientId,
+            @Param("status") OrderStatus status);
+
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :status WHERE o.internalId = :internalId")
+    int updateStatusByInternalId(@Param("internalId") String internalId, @Param("status") OrderStatus status);
+
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :status WHERE o.internalId = :internalId AND o.clientId = :clientId")
+    int updateStatusByInternalIdAndClientId(@Param("internalId") String internalId, @Param("clientId") Long clientId,
+            @Param("status") OrderStatus status);
+
+    @Modifying
     @Query("UPDATE Order o SET o.merchantOrderStatus = :merchantOrderStatus WHERE o.id = :id")
     int updateMerchantOrderStatusById(@Param("id") UUID id, @Param("merchantOrderStatus") String merchantOrderStatus);
 
@@ -29,5 +43,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     Order getOrdersById(UUID id);
 
     Optional<Order> findByMerchantOrderId(String merchantOrderId);
+
+    Order getOrdersByInternalId(String internalId);
 
 }

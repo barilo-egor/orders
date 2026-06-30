@@ -118,7 +118,7 @@ class OrderServiceTest {
         when(orderRepository.getOrdersById(orderId)).thenReturn(mockOrder);
         when(orderMapper.entityToDTO(mockOrder)).thenReturn(mockDto);
 
-        orderService.updateStatus(orderId, newStatus);
+        orderService.updateStatus(orderId.toString(), newStatus);
 
         verify(orderRepository).updateStatusById(orderId, newStatus);
         verify(eventPublisher).publishEvent(mockDto);
@@ -132,7 +132,7 @@ class OrderServiceTest {
 
         when(orderRepository.updateStatusById(orderId, newStatus)).thenReturn(0);
 
-        assertThatThrownBy(() -> orderService.updateStatus(orderId, newStatus))
+        assertThatThrownBy(() -> orderService.updateStatus(orderId.toString(), newStatus))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Record not found for the provided ID.");
 

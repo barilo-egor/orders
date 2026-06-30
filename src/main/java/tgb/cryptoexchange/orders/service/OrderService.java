@@ -20,6 +20,7 @@ import tgb.cryptoexchange.orders.repository.OrderRepository;
 import tgb.cryptoexchange.orders.utils.PageableUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -78,22 +79,35 @@ public class OrderService {
         return orderMapper.entityToDTO(order);
     }
 
+    public void updateStatus(String id, OrderStatus newStatus) {
+        updateStatus(id, null, newStatus);
+    }
+
     /**
      * Обновляет статус существующего order и публикует событие об изменении его состояния.
      *
-     * @param id        уникальный идентификатор order
+     * @param id        уникальный идентификатор или internalId order
+     * @param clientId идентификатор клиента в api-clients
      * @param newStatus новый устанавливаемый статус
      * @throws NotFoundException если order с указанным {@code id} не найден в базе данных
      */
-    public void updateStatus(UUID id, OrderStatus newStatus) {
+    public void updateStatus(String id, Long clientId, OrderStatus newStatus) {
         log.debug("Запрос на обновление статуса order, id={}, newStatus={}", id, newStatus);
-        int result = orderRepository.updateStatusById(id, newStatus);
+        UUID maybeOrderId = UUID.fromString(id);
+        int result = Objects.isNull(clientId) ? orderRepository.updateStatusById(maybeOrderId, newStatus) :
+                orderRepository.updateStatusByIdAndClientId(maybeOrderId, clientId, newStatus);
         if (result == 0) {
-            throw new NotFoundException(id.toString());
+            result = Objects.isNull(clientId) ? orderRepository.updateStatusByInternalId(id, newStatus) :
+                    orderRepository.updateStatusByInternalIdAndClientId(id, clientId, newStatus);
+            if (result == 0) {
+                throw new NotFoundException(id);
+            }
+            Order order = orderRepository.getOrdersByInternalId(id);
+            maybeOrderId = order.getId();
         }
 
         if (eventPublisher != null) {
-            eventPublisher.publishEvent(orderMapper.entityToDTO(orderRepository.getOrdersById(id)));
+            eventPublisher.publishEvent(orderMapper.entityToDTO(orderRepository.getOrdersById(maybeOrderId)));
         }
     }
 
@@ -107,9 +121,9 @@ public class OrderService {
     public void updateStatusByMerchantStatus(UUID id, MerchantCallbackEvent event) {
         log.debug("Запрос на обновление статуса order от merchantCallback, id={}, merchantCallback={}", id, event);
         if (merchantStatusProperties.isSuccess(event.getStatus())) {
-            updateStatus(id, OrderStatus.SUCCESS);
+            updateStatus(id.toString(), OrderStatus.SUCCESS);
         } else if (merchantStatusProperties.isFail(event.getStatus())) {
-            updateStatus(id, OrderStatus.TIMEOUT);
+            updateStatus(id.toString(), OrderStatus.TIMEOUT);
         } else {
             merchantUnknownStatusService.sendUnknownStatusCallback(event);
         }

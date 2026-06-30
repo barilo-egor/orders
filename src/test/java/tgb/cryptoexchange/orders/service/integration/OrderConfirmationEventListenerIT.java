@@ -91,7 +91,7 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
         order.setCreatedAt(Instant.now());
 
         orderRepository.saveAndFlush(order);
-        orderService.updateStatus(orderId, OrderStatus.SUCCESS);
+        orderService.updateStatus(orderId.toString(), OrderStatus.SUCCESS);
 
         ConsumerRecord<String, OrderConfirmationEvent> receivedRecord =
                 KafkaTestUtils.getSingleRecord(testConsumer, kafkaTopic, Duration.ofSeconds(5));
@@ -122,7 +122,7 @@ class OrderConfirmationEventListenerIT extends BaseIntegrationTest {
 
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.TIMEOUT);
+        orderService.updateStatus(orderId.toString(), OrderStatus.TIMEOUT);
 
         org.awaitility.Awaitility.await()
                 .during(1, java.util.concurrent.TimeUnit.SECONDS)

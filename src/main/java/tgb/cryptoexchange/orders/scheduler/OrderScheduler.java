@@ -50,7 +50,7 @@ public class OrderScheduler {
                 }
                 Instant timeoutExpirationTime = order.getCreatedAt().plusSeconds(clientDTO.getOrderTimeoutSeconds());
                 if (timeoutExpirationTime.isBefore(now)) {
-                    orderService.updateStatus(order.getId(), OrderStatus.TIMEOUT);
+                    orderService.updateStatus(order.getId().toString(), OrderStatus.TIMEOUT);
                 }
             } catch (Exception e) {
                 log.error("Ошибка при обработке checkOrdersTimeout {}", order.getId(), e);

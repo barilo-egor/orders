@@ -11,8 +11,6 @@ import tgb.cryptoexchange.orders.enums.OrderStatus;
 import tgb.cryptoexchange.orders.mapper.OrderMapper;
 import tgb.cryptoexchange.orders.service.OrderService;
 
-import java.util.UUID;
-
 @GrpcService
 @Slf4j
 public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
@@ -37,7 +35,8 @@ public class OrderGrpcService extends OrdersServiceGrpc.OrdersServiceImplBase {
 
     @Override
     public void updateOrderStatus(UpdateOrderStatusGrpc request, StreamObserver<Empty> responseObserver) {
-        orderService.updateStatus(UUID.fromString(request.getId()), OrderStatus.valueOf(request.getStatus()));
+        Long clientId = request.hasClientId() ? request.getClientId() : null;
+        orderService.updateStatus(request.getId(), clientId, OrderStatus.valueOf(request.getStatus()));
 
         responseObserver.onNext(Empty.newBuilder().build());
         responseObserver.onCompleted();

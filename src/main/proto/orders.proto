@@ -42,6 +42,7 @@ message CreateOrderResponseGrpc {
 message UpdateOrderStatusGrpc {
   string id = 1 [(buf.validate.field).string.min_len = 1];
   string status = 2 [(buf.validate.field).string.pattern = "^[A-Z_]+$"];
+  optional int64 client_id = 3  [(buf.validate.field).int64.gt = 0];
 }
 
 message PaginationParams {

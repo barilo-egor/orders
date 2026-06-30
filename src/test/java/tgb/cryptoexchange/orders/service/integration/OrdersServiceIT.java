@@ -100,7 +100,7 @@ class OrdersServiceIT extends BaseIntegrationTest {
                 .build();
         orderRepository.saveAndFlush(order);
 
-        orderService.updateStatus(orderId, OrderStatus.TIMEOUT);
+        orderService.updateStatus(orderId.toString(), OrderStatus.TIMEOUT);
 
         Optional<Order> updatedOrderOpt = orderRepository.findById(orderId);
         assertThat(updatedOrderOpt).isPresent();
@@ -118,7 +118,7 @@ class OrdersServiceIT extends BaseIntegrationTest {
     void shouldThrowNotFoundExceptionWhenOrderDoesNotExist() {
         UUID nonExistingId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> orderService.updateStatus(nonExistingId, OrderStatus.SUCCESS))
+        assertThatThrownBy(() -> orderService.updateStatus(nonExistingId.toString(), OrderStatus.SUCCESS))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Record not found for the provided ID.");
 
